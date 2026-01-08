@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Coming Soon</title>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -187,6 +188,38 @@
             transform: translateY(0);
         }
 
+        .notify-button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .message {
+            margin-top: 1.5rem;
+            font-size: 1rem;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .message.show {
+            opacity: 1;
+        }
+
+        .message.success {
+            border-color: rgba(52, 211, 153, 0.6);
+            background: rgba(52, 211, 153, 0.1);
+        }
+
+        .message.error {
+            border-color: rgba(248, 113, 113, 0.6);
+            background: rgba(248, 113, 113, 0.1);
+        }
+
         .floating-orb {
             position: absolute;
             border-radius: 50%;
@@ -250,10 +283,76 @@
         <h1>Coming Soon</h1>
         <p class="subtitle">Something extraordinary is on the way</p>
 
-        <form class="notify-form" onsubmit="event.preventDefault(); alert('Thank you for your interest!');">
-            <input type="email" class="email-input" placeholder="Enter your email" required>
-            <button type="submit" class="notify-button">Notify Me</button>
+        <form id="notify-form" class="notify-form">
+            <input type="email" id="user-email" class="email-input" placeholder="Enter your email" required>
+            <button type="submit" id="submit-btn" class="notify-button">Notify Me</button>
         </form>
+        <div id="message" class="message"></div>
     </div>
+
+    <script type="text/javascript">
+        // Initialize EmailJS with your public key
+        // Replace 'YOUR_PUBLIC_KEY' with your actual EmailJS public key
+        emailjs.init('YOUR_PUBLIC_KEY');
+
+        const form = document.getElementById('notify-form');
+        const submitBtn = document.getElementById('submit-btn');
+        const messageDiv = document.getElementById('message');
+        const emailInput = document.getElementById('user-email');
+
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            // Disable button and show loading state
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Sending...';
+            messageDiv.className = 'message';
+            messageDiv.textContent = '';
+
+            // Prepare email parameters
+            const templateParams = {
+                user_email: emailInput.value,
+                to_name: 'Team',
+                from_name: emailInput.value,
+                message: 'New signup for coming soon page!'
+            };
+
+            // Send email using EmailJS
+            // Replace 'YOUR_SERVICE_ID' and 'YOUR_TEMPLATE_ID' with your actual IDs
+            emailjs.send('YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', templateParams)
+                .then(function(response) {
+                    console.log('SUCCESS!', response.status, response.text);
+
+                    // Show success message
+                    messageDiv.textContent = '✓ Thank you! We\'ll notify you when we launch.';
+                    messageDiv.className = 'message success show';
+
+                    // Reset form
+                    form.reset();
+
+                    // Hide message after 5 seconds
+                    setTimeout(() => {
+                        messageDiv.className = 'message success';
+                    }, 5000);
+
+                }, function(error) {
+                    console.log('FAILED...', error);
+
+                    // Show error message
+                    messageDiv.textContent = '✗ Oops! Something went wrong. Please try again.';
+                    messageDiv.className = 'message error show';
+
+                    // Hide message after 5 seconds
+                    setTimeout(() => {
+                        messageDiv.className = 'message error';
+                    }, 5000);
+                })
+                .finally(function() {
+                    // Re-enable button
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Notify Me';
+                });
+        });
+    </script>
 </body>
 </html>
